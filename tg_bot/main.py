@@ -1,11 +1,8 @@
 import logging
 import os
 
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
-
-import common
-from common import start
-from stock_list_handler import create_stock_list_handler
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -13,13 +10,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text('Hello, world!')
+
+
 def main():
     app = Application.builder().token(os.environ['TELEGRAM_TOKEN']).build()
-
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(create_stock_list_handler())
-    app.add_handler(MessageHandler(filters=filters.ALL, callback=common.unrecognized_command_handler))
-
+    app.add_handler(CommandHandler("start", start))
     app.run_polling()
 
 
