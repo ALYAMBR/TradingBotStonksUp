@@ -2,6 +2,7 @@ package org.stonks.service;
 
 import org.springframework.stereotype.Service;
 import org.stonks.dto.Bargaining;
+import org.stonks.dto.GetDataInput;
 import org.stonks.dto.StockList;
 
 import java.time.OffsetDateTime;
@@ -20,12 +21,7 @@ public interface MoexService {
      * @param till - по какую
      * @return - список торгов за данный период
      */
-    List<Bargaining> getBargainingDataByTicker(
-            String ticker,
-            Float timeframe,
-            OffsetDateTime from,
-            OffsetDateTime till
-    );
+    List<Bargaining> getBargainingDataByTicker(GetDataInput getDataInput);
 
     /**
      *  Метод делает постраничный поиск акций
