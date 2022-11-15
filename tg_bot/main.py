@@ -4,6 +4,7 @@ import os
 from telegram.ext import Application, CommandHandler
 
 from main_menu import start
+from prediction import prediction_handler
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -18,6 +19,7 @@ def cb_pattern(str):
 def main():
     app = Application.builder().token(os.environ['TELEGRAM_TOKEN']).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(prediction_handler)
     app.run_polling()
 
 
