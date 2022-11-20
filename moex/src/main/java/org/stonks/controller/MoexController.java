@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.stonks.dto.Bargaining;
 import org.stonks.dto.GetDataInput;
-import org.stonks.service.MoexService;
+import org.stonks.service.moex.MoexService;
 
 import java.util.List;
 

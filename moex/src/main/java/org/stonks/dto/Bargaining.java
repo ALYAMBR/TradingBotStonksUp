@@ -12,12 +12,12 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 public class Bargaining {
-    private final String ticker;
-    private final String per;
-    private final OffsetDateTime date;
-    private final Float open;
-    private final Float high;
-    private final Float low;
-    private final Float close;
-    private final Float vol;
+    private String ticker;
+    private Float per;
+    private OffsetDateTime date;
+    private Float open;
+    private Float high;
+    private Float low;
+    private Float close;
+    private Integer vol;
 }
