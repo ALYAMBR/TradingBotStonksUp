@@ -4,6 +4,7 @@ import os
 from telegram.ext import Application, CommandHandler
 
 from main_menu import start
+from list_stock import list_stock_handler
 from prediction import prediction_handler
 
 logging.basicConfig(
@@ -19,6 +20,7 @@ def cb_pattern(str):
 def main():
     app = Application.builder().token(os.environ['TELEGRAM_TOKEN']).build()
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(list_stock_handler)
     app.add_handler(prediction_handler)
     app.run_polling()
 
