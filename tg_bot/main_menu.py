@@ -13,5 +13,11 @@ main_menu_keyboard = InlineKeyboardMarkup([
 ])
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start(update: Update, _) -> None:
     await update.message.reply_text('Приветственное сообщение', reply_markup=main_menu_keyboard)
+
+
+async def start_callback(update: Update, _) -> None:
+    await update.callback_query.answer()
+    await update.callback_query.message.reply_text('Приветственное сообщение', reply_markup=main_menu_keyboard)
+
