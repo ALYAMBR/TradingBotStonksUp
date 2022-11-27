@@ -1,23 +1,31 @@
 package org.stonks.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.stonks.dto.Bargaining;
-import org.stonks.dto.GetDataInput;
 import org.stonks.service.moex.MoexService;
+import org.stonks.dto.GetDataInput;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @RestController
 public class MoexController {
 	
-	@Autowired
 	MoexService moexService;
 	
 	@GetMapping("/data/{ticker}")
-	public List<Bargaining> getData(@RequestBody GetDataInput getDataInput) {
-		return moexService.getBargainingDataByTicker(getDataInput);
+	public List<Bargaining> getData(
+			@PathVariable String ticker,
+			@RequestParam String exchangeName,
+			@RequestParam String timeframe,
+			@RequestParam(required = false) String till,
+			@RequestParam(required = false) String from) {
+		return moexService.getBargainingDataByTicker(new GetDataInput(
+				ticker,
+				exchangeName,
+				Float.parseFloat(timeframe),
+				OffsetDateTime.parse(till),
+				OffsetDateTime.parse(from)
+		));
 	}
 }

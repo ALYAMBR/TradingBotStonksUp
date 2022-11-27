@@ -5,15 +5,16 @@ import lombok.*;
 import java.time.OffsetDateTime;
 
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @ToString
 @EqualsAndHashCode
 @Getter
 @Setter
 public class GetDataInput {
-	private final String ticker;
-	private final String exchangeName;
-	private final Float timeframe;
-	private final OffsetDateTime from;
-	private final OffsetDateTime till;
+	private String ticker;
+	private String exchangeName;
+	private Float timeframe;
+	private OffsetDateTime from;
+	private OffsetDateTime till;
 }
