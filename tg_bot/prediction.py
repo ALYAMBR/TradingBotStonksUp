@@ -105,12 +105,12 @@ def parse_pred_timedelta(text: str) -> datetime.timedelta:
 prediction_handler = ConversationHandler(entry_points=[
     CallbackQueryHandler(pattern=cb_pattern(MAIN_MENU_CALLBACK_DATA_PREFIX, MAIN_MENU_SEARCH_STOCKS_PREFIX),
                          callback=entrypoint)],
-                                         states={
-                                             WAITING_FOR_INPUT: [
-                                                 CallbackQueryHandler(
-                                                     pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX),
-                                                     callback=prediction_keyboard_callback),
-                                                 MessageHandler(filters=filters.TEXT, callback=handle_input)
-                                             ]
-                                         },
-                                         fallbacks=[])
+    states={
+        WAITING_FOR_INPUT: [
+            CallbackQueryHandler(
+                pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX),
+                callback=prediction_keyboard_callback),
+            MessageHandler(filters=filters.TEXT, callback=handle_input)
+        ]
+    },
+    fallbacks=[])
