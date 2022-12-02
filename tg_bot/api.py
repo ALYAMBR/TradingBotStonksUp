@@ -3,7 +3,7 @@ import requests
 API_URL = 'http://localhost:8080/api/v1'
 
 
-def api_get_stocks(page: int) -> requests.Response:
+def api_get_stocks(page: int = 1) -> requests.Response:
     return requests.get(f'{API_URL}/stocks', params={'page': page})
 
 
