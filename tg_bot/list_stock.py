@@ -95,7 +95,7 @@ async def choice_page(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
             return
 
         resp = api_get_stocks().json()
-        if page > resp["totalCount"] or page < 0:
+        if page > resp["totalCount"] or page < 1:
             await context.bot.send_message(update.effective_message.chat_id,
                                            f'Введите целое положительное число в промежутке от 1 до {resp["totalCount"]}')
             return
