@@ -2,6 +2,7 @@ package org.stonks.controller;
 
 import org.springframework.web.bind.annotation.*;
 import org.stonks.dto.Bargaining;
+import org.stonks.dto.StockList;
 import org.stonks.service.moex.MoexService;
 import org.stonks.dto.GetDataInput;
 
@@ -27,5 +28,11 @@ public class MoexController {
 				OffsetDateTime.parse(till),
 				OffsetDateTime.parse(from)
 		));
+	}
+
+	@GetMapping("/stocks")
+	public StockList findStocks(@RequestParam(name = "page", defaultValue = "1") Integer page,
+								@RequestParam(name = "query") String prefix) {
+		return moexService.getStocksByPage(page, prefix);
 	}
 }

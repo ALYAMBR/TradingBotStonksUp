@@ -1,12 +1,17 @@
 package org.stonks.service.moex;
 
-import jdk.nashorn.internal.objects.annotations.Property;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.stonks.dto.Bargaining;
 import org.stonks.dto.GetDataInput;
+import org.stonks.dto.Stock;
 import org.stonks.dto.StockList;
 import org.stonks.model.moex.Security;
 import org.stonks.service.moex.xmlHandlers.BargainingsXMLHandler;
@@ -20,20 +25,30 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class MoexServiceImpl implements MoexService {
     private final RestTemplate http;
     private final SAXParser parser;
 
-    @Property(name = "urls.moex")
+    @Value("${urls.moex}")
     private String moexUrl;
-    @Property(name = "urls.moex.bargaining.path")
+    @Value("${urls.moex.bargaining.path}")
     private String bargaingPath;
-    @Property(name = "urls.moex.securitiesInfo.path")
+    @Value("${urls.moex.securitiesInfo.path}")
     private String securityInfoPath;
+    @Value("${urls.moex.stocks.path}")
+    private String STOCKS_INFO_PATH;
 
+    @Value("${moex.stocks.paging.perPage}")
+    private Integer pageSize;
+
+    ObjectMapper mapper = new JsonMapper();
 
     @Autowired
     public MoexServiceImpl(RestTemplateBuilder http) {
@@ -51,10 +66,9 @@ public class MoexServiceImpl implements MoexService {
         List<Bargaining> result = new LinkedList<>();
         List<Security> securities = getSecurityByName(getDataInput.getTicker());
         for (Security security : securities) {
-            String responseBody =
-                    http.getForEntity(
-                            moexUrl + bargaingPath + "?from={from}&till={till}&interval={interval}"
-                            , String.class, createVarsForGetBargaings(getDataInput, security)).getBody();
+            String responseBody = http.getForEntity(
+                    moexUrl + bargaingPath + "?from={from}&till={till}&interval={interval}"
+                    , String.class, createVarsForGetBargaings(getDataInput, security)).getBody();
 
             if (responseBody == null) {
                 throw new RuntimeException("Не удалось получить свечи");
@@ -75,8 +89,27 @@ public class MoexServiceImpl implements MoexService {
     }
 
     @Override
-    public StockList getStocksByPage(Integer page, String partOfName) {
-        return null;
+    public StockList getStocksByPage(Integer pageNum, String partOfName) {
+        // TODO: убрать когда это апигвна поменяют и сделают нумерацю страниц с 0
+        pageNum--;
+
+        String responseBody = http.getForEntity(
+            moexUrl + STOCKS_INFO_PATH,
+            String.class,
+            partOfName, pageSize, pageNum * pageSize).getBody();
+
+        try {
+            JsonNode securities = mapper.readTree(responseBody).get(1).at("/securities");
+
+            List<Stock> stocks = mapper.convertValue(securities,
+                mapper.getTypeFactory().constructCollectionType(List.class, Stock.class));
+
+            stocks = stocks.stream().distinct().collect(Collectors.toList());
+
+            return new StockList(pageNum + 1, pageSize, stocks.size(), stocks);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Map<String, String> createVarsForGetBargaings(GetDataInput getDataInput, Security security) {
@@ -97,7 +130,7 @@ public class MoexServiceImpl implements MoexService {
         Map<String, String> vars = new HashMap<>();
         vars.put("security", ticker);
         String xmlResponse = http.getForEntity(
-                moexUrl + securityInfoPath, String.class, vars
+            moexUrl + securityInfoPath, String.class, vars
         ).getBody();
         InputStream targetStream = new ByteArrayInputStream(xmlResponse.getBytes());
         try {
