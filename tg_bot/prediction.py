@@ -4,40 +4,26 @@ import re
 import string
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler, MessageHandler, filters
+from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
 
 from api import api_get_prediction
 from common import *
+from main_menu import start_callback
 
 logger = logging.getLogger(__name__)
 
 prediction_keyboard = InlineKeyboardMarkup([
     [
         InlineKeyboardButton('↩', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_GO_BACK_PREFIX}'),
-        InlineKeyboardButton('x', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_X_PREFIX}'),
-        InlineKeyboardButton('y', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_Y_PREFIX}'),
-        InlineKeyboardButton('z', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_Z_PREFIX}')
+        InlineKeyboardButton('15 минут', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_X_PREFIX}'),
+        InlineKeyboardButton('2 часа', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_Y_PREFIX}'),
+        InlineKeyboardButton('5 дней', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_Z_PREFIX}')
     ]
 ])
 
-# states
-WAITING_FOR_INPUT = 1
 
-
-async def entrypoint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.callback_query.answer()
-    await context.bot.send_message(update.effective_message.chat_id, 'Выбор срока прогноза',
-                                   reply_markup=prediction_keyboard)
-    return WAITING_FOR_INPUT
-
-
-async def go_back(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    pass  # call handler that we are supposed to call
-    return ConversationHandler.END
-
-
-async def predict(update: Update, context: ContextTypes.DEFAULT_TYPE, pred_timedelta: datetime.timedelta) -> int:
-    ticker = '123'  # context.user_data['ticker']
+async def predict(update: Update, context: ContextTypes.DEFAULT_TYPE, pred_timedelta: datetime.timedelta) -> None:
+    ticker = context.user_data['ticker']
     date = str(datetime.datetime.utcnow() + pred_timedelta)
 
     try:
@@ -52,29 +38,14 @@ async def predict(update: Update, context: ContextTypes.DEFAULT_TYPE, pred_timed
 
     await context.bot.send_message(update.effective_message.chat_id, 'Шаблон предсказания ' + req.text)
 
-    return ConversationHandler.END
 
-
-async def prediction_keyboard_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    await update.callback_query.answer()
-    if update.callback_query.data.find(PREDICTION_GO_BACK_PREFIX) != -1:
-        await go_back(update, context)
-    elif update.callback_query.data.find(PREDICTION_DATE_X_PREFIX) != -1:
-        await predict(update, context, datetime.timedelta(seconds=60 * 15))
-    elif update.callback_query.data.find(PREDICTION_DATE_Y_PREFIX) != -1:
-        await predict(update, context, datetime.timedelta(seconds=60 * 60 * 2))
-    elif update.callback_query.data.find(PREDICTION_DATE_Z_PREFIX) != -1:
-        await predict(update, context, datetime.timedelta(days=5))
-    return await go_back(update, context)
-
-
-async def handle_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def handle_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     try:
         pred_timedelta = parse_pred_timedelta(update.message.text)
     except:
         await context.bot.send_message(update.effective_message.chat_id,
                                        'Срок прогноза указан неверно. Например, для прогноза на 3 минуты введите "3 мин".')
-        return WAITING_FOR_INPUT
+        return
 
     return await predict(update, context, pred_timedelta)
 
@@ -102,15 +73,51 @@ def parse_pred_timedelta(text: str) -> datetime.timedelta:
     return datetime.timedelta(seconds=number * unit.total_seconds())
 
 
-prediction_handler = ConversationHandler(entry_points=[
-    CallbackQueryHandler(pattern=cb_pattern(MAIN_MENU_CALLBACK_DATA_PREFIX, MAIN_MENU_SEARCH_STOCKS_PREFIX),
-                         callback=entrypoint)],
-    states={
-        WAITING_FOR_INPUT: [
-            CallbackQueryHandler(
-                pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX),
-                callback=prediction_keyboard_callback),
-            MessageHandler(filters=filters.TEXT, callback=handle_input)
-        ]
-    },
-    fallbacks=[])
+async def entrypoint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.callback_query.answer()
+    await context.bot.send_message(update.effective_message.chat_id, 'Выбор срока прогноза',
+                                   reply_markup=prediction_keyboard)
+
+
+async def prediction_go_back_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.callback_query.answer()
+    await start_callback(update, context)
+
+
+async def prediction_x_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.callback_query.answer()
+    await predict(update, context, datetime.timedelta(seconds=60 * 15))
+
+
+async def prediction_y_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.callback_query.answer()
+    await predict(update, context, datetime.timedelta(seconds=60 * 60 * 2))
+
+
+async def prediction_z_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.callback_query.answer()
+    await predict(update, context, datetime.timedelta(days=5))
+
+
+async def predict_ticker(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    context.user_data['ticker'] = update.callback_query.data.removeprefix(TICKER_NAME_PREFIX).lstrip()
+    await entrypoint(update, context)
+
+
+prediction_handler = CallbackQueryHandler(
+    pattern=cb_pattern(MAIN_MENU_CALLBACK_DATA_PREFIX, MAIN_MENU_SEARCH_STOCKS_PREFIX), callback=entrypoint)
+
+prediction_go_back_handler = CallbackQueryHandler(
+    pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX, PREDICTION_GO_BACK_PREFIX),
+    callback=prediction_go_back_callback)
+
+prediction_date_x_handler = CallbackQueryHandler(
+    pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX, PREDICTION_DATE_X_PREFIX), callback=prediction_x_callback)
+
+prediction_date_y_handler = CallbackQueryHandler(
+    pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX, PREDICTION_DATE_Y_PREFIX), callback=prediction_y_callback)
+
+prediction_date_z_handler = CallbackQueryHandler(
+    pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX, PREDICTION_DATE_Z_PREFIX), callback=prediction_z_callback)
+
+predict_ticker_handler = CallbackQueryHandler(pattern=cb_pattern(TICKER_NAME_PREFIX), callback=predict_ticker)
