@@ -17,7 +17,7 @@ prediction_keyboard = InlineKeyboardMarkup([
         InlineKeyboardButton('x', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_X_PREFIX}'),
         InlineKeyboardButton('y', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_Y_PREFIX}'),
         InlineKeyboardButton('z', callback_data=f'{PREDICTION_CALLBACK_DATA_PREFIX} {PREDICTION_DATE_Z_PREFIX}')
-     ]
+    ]
 ])
 
 # states
@@ -26,7 +26,8 @@ WAITING_FOR_INPUT = 1
 
 async def entrypoint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.callback_query.answer()
-    await context.bot.send_message(update.effective_message.chat_id, 'Выбор срока прогноза', reply_markup=prediction_keyboard)
+    await context.bot.send_message(update.effective_message.chat_id, 'Выбор срока прогноза',
+                                   reply_markup=prediction_keyboard)
     return WAITING_FOR_INPUT
 
 
@@ -71,11 +72,11 @@ async def handle_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
     try:
         pred_timedelta = parse_pred_timedelta(update.message.text)
     except:
-        await context.bot.send_message(update.effective_message.chat_id, 'Срок прогноза указан неверно. Например, для прогноза на 3 минуты введите "3 мин".')
+        await context.bot.send_message(update.effective_message.chat_id,
+                                       'Срок прогноза указан неверно. Например, для прогноза на 3 минуты введите "3 мин".')
         return WAITING_FOR_INPUT
 
     return await predict(update, context, pred_timedelta)
-
 
 
 def parse_pred_timedelta(text: str) -> datetime.timedelta:
@@ -88,7 +89,7 @@ def parse_pred_timedelta(text: str) -> datetime.timedelta:
     unit_lookup_table = {}
     for k, v in {
         ('дней', 'день', 'д'): datetime.timedelta(days=1),
-        ('часов', 'часа', 'час', 'ч'): datetime.timedelta(seconds=60*60),
+        ('часов', 'часа', 'час', 'ч'): datetime.timedelta(seconds=60 * 60),
         ('минут', 'минуты', 'минута', 'м', 'мин'): datetime.timedelta(seconds=60),
         ('секунд', 'секунды', 'секунда', 'с', 'сек'): datetime.timedelta(seconds=1)
     }.items():
@@ -101,11 +102,15 @@ def parse_pred_timedelta(text: str) -> datetime.timedelta:
     return datetime.timedelta(seconds=number * unit.total_seconds())
 
 
-prediction_handler = ConversationHandler(entry_points=[CallbackQueryHandler(pattern=cb_pattern(MAIN_MENU_CALLBACK_DATA_PREFIX, MAIN_MENU_SEARCH_STOCKS_PREFIX), callback=entrypoint)],
-                                         states={
-                                             WAITING_FOR_INPUT: [
-                                                 CallbackQueryHandler(pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX), callback=prediction_keyboard_callback),
-                                                 MessageHandler(filters=filters.TEXT, callback=handle_input)
-                                             ]
-                                         },
-                                         fallbacks=[])
+prediction_handler = ConversationHandler(entry_points=[
+    CallbackQueryHandler(pattern=cb_pattern(MAIN_MENU_CALLBACK_DATA_PREFIX, MAIN_MENU_SEARCH_STOCKS_PREFIX),
+                         callback=entrypoint)],
+    states={
+        WAITING_FOR_INPUT: [
+            CallbackQueryHandler(
+                pattern=cb_pattern(PREDICTION_CALLBACK_DATA_PREFIX),
+                callback=prediction_keyboard_callback),
+            MessageHandler(filters=filters.TEXT, callback=handle_input)
+        ]
+    },
+    fallbacks=[])
