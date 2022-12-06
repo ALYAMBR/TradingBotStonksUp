@@ -1,6 +1,7 @@
 package org.stonks.service.moex;
 
 
+import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -54,8 +55,9 @@ public class MoexServiceImpl implements MoexService {
 
         String responseBody =
                 http.getForEntity(
-                        moexUrl + bargaingPath + "?from={from}&till={till}&interval={interval}"
-                        , String.class, createVarsForGetBargaings(getDataInput)
+                        moexUrl + String.format("/iss/engines/stock/markets/shares/securities/%s/candles.xml?%s",
+                                getDataInput.getTicker(), createVarsForGetBargaings(getDataInput)),
+                        String.class
                 ).getBody();
 
         if (responseBody == null) {
@@ -81,8 +83,8 @@ public class MoexServiceImpl implements MoexService {
         List<Stock> result = new ArrayList<>();
 
         String responseBody = http.getForEntity(
-            moexUrl + securityInfoPath + "?q={q}&engine={engine}&market={market}&limit={limit}&start={start}",
-            String.class, createVarsForGetStocks(page, partOfName)
+            moexUrl + securityInfoPath + "?" + createVarsForGetStocks(page, partOfName),
+            String.class
         ).getBody();
 
         if (responseBody == null) {
@@ -106,24 +108,22 @@ public class MoexServiceImpl implements MoexService {
             .build();
     }
 
-    private Map<String, String> createVarsForGetBargaings(GetDataInput getDataInput) {
-        Map<String, String> vars = new HashMap<>();
-        vars.put("from", getDataInput.getFrom().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        vars.put("till", getDataInput.getTill().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
-        vars.put("interval", String.valueOf(getDataInput.getTimeframe()));
-        vars.put("security", getDataInput.getTicker());
-        return vars;
+    private String createVarsForGetBargaings(GetDataInput getDataInput) {
+        StringBuilder queryVars = new StringBuilder();
+        queryVars.append("from=" + getDataInput.getFrom().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                .append("till=" + getDataInput.getTill().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                .append("interval=" + getDataInput.getTimeframe());
+        return queryVars.toString();
     }
 
-    private Map<String, String> createVarsForGetStocks(Integer page, String partOfName) {
-        Map<String, String> vars = new HashMap<>();
-        if (partOfName != null && !(partOfName.isEmpty())) {
-            vars.put("q", partOfName);
-        }
-        vars.put("engine", "stock");
-        vars.put("market", "shares");
-        vars.put("limit", String.valueOf(perPage));
-        vars.put("start", String.valueOf(perPage*(page-1)));
-        return vars;
+    private String createVarsForGetStocks(Integer page, @NonNull String partOfName) {
+        StringBuilder queryVars = new StringBuilder();
+        queryVars.append("q=" + partOfName)
+                .append("engine=stock")
+                .append("market=shares")
+                .append("limit=" + perPage)
+                .append("start=" + perPage*(page-1));
+        
+        return queryVars.toString();
     }
 }

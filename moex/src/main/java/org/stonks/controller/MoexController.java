@@ -22,14 +22,11 @@ public class MoexController {
 			@RequestParam String timeframe,
 			@RequestParam String till,
 			@RequestParam String from) {
-//		if (till != null) {
-			till.replaceAll("%3A", ":");
-			till.replaceAll("%2B", "+");
-//		}
-//		if (from != null) {
-			from.replaceAll("%3A", ":");
-			from.replaceAll("%2B", "+");
-//		}
+		till.replaceAll("%3A", ":");
+		till.replaceAll("%2B", "+");
+		
+		from.replaceAll("%3A", ":");
+		from.replaceAll("%2B", "+");
 		return moexService.getBargainingDataByTicker(new GetDataInput(
 				ticker,
 				exchangeName,
