@@ -1,5 +1,6 @@
 package org.stonks.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.stonks.dto.Bargaining;
 import org.stonks.service.moex.MoexService;
@@ -11,6 +12,7 @@ import java.util.List;
 @RestController
 public class MoexController {
 	
+	@Autowired
 	MoexService moexService;
 	
 	@GetMapping("/data/{ticker}")
@@ -18,8 +20,16 @@ public class MoexController {
 			@PathVariable String ticker,
 			@RequestParam String exchangeName,
 			@RequestParam String timeframe,
-			@RequestParam(required = false) String till,
-			@RequestParam(required = false) String from) {
+			@RequestParam String till,
+			@RequestParam String from) {
+//		if (till != null) {
+			till.replaceAll("%3A", ":");
+			till.replaceAll("%2B", "+");
+//		}
+//		if (from != null) {
+			from.replaceAll("%3A", ":");
+			from.replaceAll("%2B", "+");
+//		}
 		return moexService.getBargainingDataByTicker(new GetDataInput(
 				ticker,
 				exchangeName,
