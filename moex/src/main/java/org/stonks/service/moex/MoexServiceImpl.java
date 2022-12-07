@@ -52,7 +52,7 @@ public class MoexServiceImpl implements MoexService {
     @Override
     public List<Bargaining> getBargainingDataByTicker(GetDataInput getDataInput) {
         List<Bargaining> result = new LinkedList<>();
-
+        
         String responseBody =
                 http.getForEntity(
                         moexUrl + String.format("/iss/engines/stock/markets/shares/securities/%s/candles.xml?%s",
@@ -111,18 +111,19 @@ public class MoexServiceImpl implements MoexService {
     private String createVarsForGetBargaings(GetDataInput getDataInput) {
         StringBuilder queryVars = new StringBuilder();
         queryVars.append("from=" + getDataInput.getFrom().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .append("till=" + getDataInput.getTill().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .append("interval=" + getDataInput.getTimeframe());
+                .append("&till=" + getDataInput.getTill().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
+                .append("&interval=" + getDataInput.getTimeframe());
+        
         return queryVars.toString();
     }
 
     private String createVarsForGetStocks(Integer page, @NonNull String partOfName) {
         StringBuilder queryVars = new StringBuilder();
         queryVars.append("q=" + partOfName)
-                .append("engine=stock")
-                .append("market=shares")
-                .append("limit=" + perPage)
-                .append("start=" + perPage*(page-1));
+                .append("&engine=stock")
+                .append("&market=shares")
+                .append("&limit=" + perPage)
+                .append("&start=" + perPage*(page-1));
         
         return queryVars.toString();
     }

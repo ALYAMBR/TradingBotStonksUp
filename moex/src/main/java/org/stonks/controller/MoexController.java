@@ -31,8 +31,8 @@ public class MoexController {
 				ticker,
 				exchangeName,
 				Float.parseFloat(timeframe),
-				OffsetDateTime.parse(till),
-				OffsetDateTime.parse(from)
+				OffsetDateTime.parse(from),
+				OffsetDateTime.parse(till)
 		));
 	}
 }
