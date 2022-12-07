@@ -4,8 +4,8 @@ import os
 from telegram.ext import Application, CommandHandler
 
 from main_menu import start
-from list_stock import list_stock_handler, list_stock_back_handler, list_stock_previous_page_handler, \
-    list_stocks_search_page_handler, list_stock_next_page_handler, list_stock_choice_page_handler
+from list_stock import list_stock_handler, search_stock_handler, list_stock_back_handler, list_stock_previous_page_handler, \
+    list_stock_search_page_handler, list_stock_next_page_handler, list_stock_message_handler
 from prediction import prediction_handler, prediction_go_back_handler, prediction_date_x_handler, \
     prediction_date_y_handler, prediction_date_z_handler, predict_ticker_handler
 
@@ -25,11 +25,12 @@ def main():
     app.add_handler(CommandHandler("start", start))
 
     app.add_handler(list_stock_handler)
+    app.add_handler(search_stock_handler)
     app.add_handler(list_stock_back_handler)
     app.add_handler(list_stock_previous_page_handler)
-    app.add_handler(list_stocks_search_page_handler)
+    app.add_handler(list_stock_search_page_handler)
     app.add_handler(list_stock_next_page_handler)
-    app.add_handler(list_stock_choice_page_handler)
+    app.add_handler(list_stock_message_handler)
 
     app.add_handler(prediction_handler)
     app.add_handler(prediction_go_back_handler)
