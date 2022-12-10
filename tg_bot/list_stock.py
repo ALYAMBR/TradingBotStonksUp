@@ -10,7 +10,7 @@ from main_menu import start_callback
 logger = logging.getLogger(__name__)
 
 
-def get_keyboard(page: int, prefix: str = "") -> InlineKeyboardMarkup:
+def get_keyboard(page: int, prefix: str) -> InlineKeyboardMarkup:
     resp = api_get_stocks(page, prefix).json()
 
     keyboard = [[]]
@@ -31,11 +31,11 @@ def get_keyboard(page: int, prefix: str = "") -> InlineKeyboardMarkup:
 async def list_stock(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     context.user_data["page"] = 1
     context.user_data["wait_number_for_page"] = False
-    context.user_data["ticker_name"] = ""
+    context.user_data["ticker_name"] = None
 
     await update.callback_query.answer()
 
-    keyboard = get_keyboard(context.user_data["page"])
+    keyboard = get_keyboard(context.user_data["page"], context.user_data["ticker_name"])
     await context.bot.send_message(update.effective_message.chat_id,
                                    'Выберите акцию, по которой вы хотите сделать прогноз',
                                    reply_markup=keyboard)
@@ -45,6 +45,7 @@ async def search_stock(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     context.user_data["page"] = 1
     context.user_data["wait_number_for_page"] = False
     context.user_data["wait_ticker_name"] = True
+    context.user_data["ticker_name"] = None
 
     await update.callback_query.answer()
 
@@ -111,7 +112,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         context.user_data["page"] = page
         context.user_data["wait_number_for_page"] = False
 
-        keyboard = get_keyboard(page)
+        keyboard = get_keyboard(page, context.user_data["ticker_name"])
         await context.bot.send_message(update.effective_message.chat_id,
                                        'Выберите акцию, по которой вы хотите сделать прогноз',
                                        reply_markup=keyboard)
