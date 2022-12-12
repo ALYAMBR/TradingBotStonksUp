@@ -20,5 +20,4 @@ public class Bargaining {
     private Float low;
     private Float close;
     private Integer vol;
-    private String currency;
 }

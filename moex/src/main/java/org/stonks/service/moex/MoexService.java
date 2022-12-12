@@ -1,6 +1,7 @@
 package org.stonks.service.moex;
 
 import org.stonks.dto.Bargaining;
+import org.stonks.dto.BargainsResponse;
 import org.stonks.dto.GetDataInput;
 import org.stonks.dto.StockList;
 
@@ -15,7 +16,7 @@ public interface MoexService {
      * @param getDataInput - входные параметры для поиска
      * @return - список торгов за данный период
      */
-    List<Bargaining> getBargainingDataByTicker(GetDataInput getDataInput);
+    BargainsResponse getBargainingDataByTicker(GetDataInput getDataInput);
 
     /**
      *  Метод делает постраничный поиск акций

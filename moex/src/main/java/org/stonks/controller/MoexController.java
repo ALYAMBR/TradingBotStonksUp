@@ -1,38 +1,33 @@
 package org.stonks.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
-import org.stonks.dto.Bargaining;
+import org.stonks.dto.BargainsResponse;
 import org.stonks.service.moex.MoexService;
 import org.stonks.dto.GetDataInput;
 
 import java.time.OffsetDateTime;
-import java.util.List;
 
 @RestController
+@AllArgsConstructor
 public class MoexController {
-	
-	@Autowired
 	MoexService moexService;
 	
 	@GetMapping("/data/{ticker}")
-	public List<Bargaining> getData(
+	public BargainsResponse getData(
 			@PathVariable String ticker,
 			@RequestParam String exchangeName,
 			@RequestParam String timeframe,
-			@RequestParam String till,
-			@RequestParam String from) {
-		till.replaceAll("%3A", ":");
-		till.replaceAll("%2B", "+");
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String till,
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) String from) {
 		
-		from.replaceAll("%3A", ":");
-		from.replaceAll("%2B", "+");
 		return moexService.getBargainingDataByTicker(new GetDataInput(
 				ticker,
 				exchangeName,
 				Float.parseFloat(timeframe),
-				OffsetDateTime.parse(from),
-				OffsetDateTime.parse(till)
+				OffsetDateTime.parse(new StringBuilder(from).append("+00:00").toString()),
+				OffsetDateTime.parse(new StringBuilder(till).append("+00:00").toString())
 		));
 	}
 }

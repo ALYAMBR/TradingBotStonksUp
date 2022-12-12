@@ -7,10 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.stonks.dto.Bargaining;
-import org.stonks.dto.GetDataInput;
-import org.stonks.dto.Stock;
-import org.stonks.dto.StockList;
+import org.stonks.dto.*;
 import org.stonks.service.moex.xmlHandlers.BargainingsXMLHandler;
 import org.stonks.service.moex.xmlHandlers.SecuritiesXMLHandler;
 import org.xml.sax.SAXException;
@@ -28,6 +25,7 @@ import java.util.*;
 public class MoexServiceImpl implements MoexService {
     private final RestTemplate http;
     private final SAXParser parser;
+    private final String RUB = "RUB";
 
     @Value("${urls.moex}")
     private String moexUrl;
@@ -50,7 +48,7 @@ public class MoexServiceImpl implements MoexService {
     }
 
     @Override
-    public List<Bargaining> getBargainingDataByTicker(GetDataInput getDataInput) {
+    public BargainsResponse getBargainingDataByTicker(GetDataInput getDataInput) {
         List<Bargaining> result = new LinkedList<>();
         
         String responseBody =
@@ -75,7 +73,8 @@ public class MoexServiceImpl implements MoexService {
             bargaining.setTicker(getDataInput.getTicker());
             bargaining.setPer(getDataInput.getTimeframe());
         }
-        return result;
+        
+        return new BargainsResponse(RUB, result);
     }
 
     @Override
