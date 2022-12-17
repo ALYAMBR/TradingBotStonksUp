@@ -1,0 +1,14 @@
+version: "3.3"
+
+services:
+  moex_backend:
+    container_name: moex_backend
+    image: moex-backend:latest
+    ports:
+      - "8080:8080"
+  algo_back:
+    container_name: algo_back
+    image: algo-back:latest
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
