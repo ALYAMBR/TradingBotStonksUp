@@ -4,8 +4,6 @@
 
 В директории moex/ выполнить:
 
-> mvn clean package
-
 > docker build -t moex-backend:latest
 
 Сборка бэкенда алгоритма:
