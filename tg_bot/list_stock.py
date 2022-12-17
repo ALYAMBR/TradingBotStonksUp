@@ -28,10 +28,11 @@ def get_keyboard(page: int, prefix: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(keyboard)
 
 
-async def list_stock(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    context.user_data["page"] = 1
-    context.user_data["wait_number_for_page"] = False
-    context.user_data["ticker_name"] = None
+async def list_stock(update: Update, context: ContextTypes.DEFAULT_TYPE, should_reset=True) -> None:
+    if should_reset:
+        context.user_data["page"] = 1
+        context.user_data["wait_number_for_page"] = False
+        context.user_data["ticker_name"] = None
 
     await update.callback_query.answer()
 
@@ -96,7 +97,7 @@ async def search_page(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    if context.user_data["wait_number_for_page"]:
+    if context.user_data.get("wait_number_for_page"):
         try:
             page = int(update.message.text)
         except ValueError:
@@ -117,7 +118,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                                        'Выберите акцию, по которой вы хотите сделать прогноз',
                                        reply_markup=keyboard)
 
-    if context.user_data["wait_ticker_name"]:
+    if context.user_data.get("wait_ticker_name"):
         context.user_data["ticker_name"] = update.message.text
 
         context.user_data["wait_ticker_name"] = False

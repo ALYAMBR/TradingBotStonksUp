@@ -6,9 +6,9 @@ import string
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ConversationHandler, CallbackQueryHandler
 
+import list_stock
 from api import api_get_prediction
 from common import *
-from main_menu import start_callback
 
 logger = logging.getLogger(__name__)
 
@@ -24,19 +24,19 @@ prediction_keyboard = InlineKeyboardMarkup([
 
 async def predict(update: Update, context: ContextTypes.DEFAULT_TYPE, pred_timedelta: datetime.timedelta) -> None:
     ticker = context.user_data['ticker']
-    date = str(datetime.datetime.utcnow() + pred_timedelta)
+    date = (datetime.datetime.utcnow() + pred_timedelta).isoformat()
 
     try:
         req = api_get_prediction(ticker=ticker, date=date)
     except:
-        await context.bot.send_message(update.effective_message.chat_id, 'Шаблон что-то пошло не так')
+        await context.bot.send_message(update.effective_message.chat_id, 'Что-то пошло не так')
         return ConversationHandler.END
 
     if req.status_code != 200:
-        await context.bot.send_message(update.effective_message.chat_id, 'Шаблон что-то пошло не так')
+        await context.bot.send_message(update.effective_message.chat_id, 'Что-то пошло не так')
         return ConversationHandler.END
 
-    await context.bot.send_message(update.effective_message.chat_id, 'Шаблон предсказания ' + req.text)
+    await context.bot.send_message(update.effective_message.chat_id, 'Предсказание: ' + str(req.json()["growthChance"]))
 
 
 async def handle_input(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -81,7 +81,7 @@ async def entrypoint(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
 async def prediction_go_back_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.callback_query.answer()
-    await start_callback(update, context)
+    await list_stock.list_stock(update, context, False)
 
 
 async def prediction_x_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
