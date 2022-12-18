@@ -24,7 +24,7 @@ public class SecuritiesXMLHandler extends DefaultHandler {
             String ticker = attributes.getValue("secid");
             String name = attributes.getValue("name");
             Stock stock = Stock.builder()
-                .stockName(name)
+                .shortStockName(name)
                 .ticker(ticker)
                 .build();
             stocks.add(stock);
