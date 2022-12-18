@@ -1,40 +1,48 @@
 package org.stonks.service.moex;
 
 
-import lombok.NonNull;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import org.stonks.dto.*;
+import org.stonks.dto.Bargaining;
+import org.stonks.dto.BargainsResponse;
+import org.stonks.dto.GetDataInput;
+import org.stonks.dto.Stock;
+import org.stonks.dto.StockList;
 import org.stonks.service.moex.xmlHandlers.BargainingsXMLHandler;
-import org.stonks.service.moex.xmlHandlers.SecuritiesXMLHandler;
 import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 @Service
 public class MoexServiceImpl implements MoexService {
+
     private final RestTemplate http;
     private final SAXParser parser;
-    private final String RUB = "RUB";
+    private final ObjectMapper mapper = new JsonMapper();
+
+    private static final String RUB = "RUB";
 
     @Value("${urls.moex}")
     private String moexUrl;
-    @Value("${urls.moex.bargaining.path}")
-    private String bargaingPath;
-    @Value("${urls.moex.securities.path}")
-    private String securityInfoPath;
     @Value("${stocks.moex.paging.perPage}")
     private Integer perPage;
+    @Value("${urls.moex.stocks.path}")
+    private String STOCKS_INFO_PATH;
 
     @Autowired
     public MoexServiceImpl(RestTemplateBuilder http) {
@@ -78,52 +86,34 @@ public class MoexServiceImpl implements MoexService {
     }
 
     @Override
-    public StockList getStocksByPage(Integer page, String partOfName) {
-        List<Stock> result = new ArrayList<>();
+    public StockList getStocksByPage(Integer pageNum, String partOfName) {
+        // TODO: убрать когда это апигвна поменяют и сделают нумерацю страниц с 0
+        pageNum--;
 
         String responseBody = http.getForEntity(
-            moexUrl + securityInfoPath + "?" + createVarsForGetStocks(page, partOfName),
-            String.class
-        ).getBody();
+            moexUrl + STOCKS_INFO_PATH,
+            String.class,
+            partOfName, perPage, pageNum * perPage).getBody();
 
-        if (responseBody == null) {
-            throw new RuntimeException("Не удалось получить список акций");
-        }
-
-        InputStream targetStream = new ByteArrayInputStream(responseBody.getBytes());
-
-        SecuritiesXMLHandler handler = new SecuritiesXMLHandler(result);
         try {
-            parser.parse(targetStream, handler);
-        } catch (SAXException | IOException e) {
-            throw new RuntimeException("Не удалось распарсить акции");
-        }
+            JsonNode securities = mapper.readTree(responseBody).get(1).at("/securities");
 
-        return StockList.builder()
-            .pageNum(page)
-            .pageSize(perPage)
-            .stocks(result)
-            .totalCount(result.size())
-            .build();
+            List<Stock> stocks = mapper.convertValue(securities,
+                mapper.getTypeFactory().constructCollectionType(List.class, Stock.class));
+
+            stocks = stocks.stream().distinct().collect(Collectors.toList());
+
+            return new StockList(pageNum + 1, perPage, stocks.size(), stocks);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
+
 
     private String createVarsForGetBargaings(GetDataInput getDataInput) {
-        StringBuilder queryVars = new StringBuilder();
-        queryVars.append("from=" + getDataInput.getFrom().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .append("&till=" + getDataInput.getTill().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .append("&interval=" + getDataInput.getTimeframe());
-        
-        return queryVars.toString();
-    }
-
-    private String createVarsForGetStocks(Integer page, @NonNull String partOfName) {
-        StringBuilder queryVars = new StringBuilder();
-        queryVars.append("q=" + partOfName)
-                .append("&engine=stock")
-                .append("&market=shares")
-                .append("&limit=" + perPage)
-                .append("&start=" + perPage*(page-1));
-        
-        return queryVars.toString();
+        return "from=" + getDataInput.getFrom().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            + "&till=" + getDataInput.getTill()
+            .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+            + "&interval=" + getDataInput.getTimeframe();
     }
 }
