@@ -81,7 +81,7 @@ class Pipeline:
             0 otherwise
         """
         X = self.__preprocess(df)
-        prediction = int(self.__clf.predict([X])[0])
+        prediction = self.__clf.predict_proba([X])[0, 1]
         return prediction
     
     def __preprocess(self, df):
