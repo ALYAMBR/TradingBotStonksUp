@@ -24,7 +24,7 @@ def get_forecast(request, ticker):
     df = make_csv_data(data)
     growth_chance = get_prediction(df, algorithm_name, exchange_name, ticker)
     response = {
-        'growthChange': growth_chance
+        'growthChance': growth_chance
     }
     return JsonResponse(response)
 
