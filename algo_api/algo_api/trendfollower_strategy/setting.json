@@ -1,0 +1,11 @@
+{
+  "long_high_period": 25,
+  "long_low_period": 20,
+  "long_atr_period": 12,
+  "long_stop_param": 3,
+  "short_high_period": 20,
+  "short_low_period": 25,
+  "short_atr_period": 12,
+  "short_stop_param": 4,
+  "time_frame": 1
+}
