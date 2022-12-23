@@ -9,4 +9,4 @@ def api_get_stocks(page: int = 1, prefix: str = None) -> requests.Response:
 
 
 def api_get_prediction(ticker: str, date: str) -> requests.Response:
-    return requests.get(f'{PREDICTION_API_URL}/forecast/' + ticker, params={'date': date})
+    return requests.get(f'{PREDICTION_API_URL}/forecast/' + ticker, params={'date': date, 'exchangeName': 'MOEX'})
