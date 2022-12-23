@@ -9,6 +9,7 @@ import org.stonks.service.moex.MoexService;
 import org.stonks.dto.GetDataInput;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 
 @RestController
 @AllArgsConstructor
@@ -35,7 +36,7 @@ public class MoexController {
 	@GetMapping("/stocks")
 	public StockList findStocks(
 		@RequestParam(name = "page", defaultValue = "1") Integer page,
-		@RequestParam(name = "query") String prefix) {
-		return moexService.getStocksByPage(page, prefix);
+		@RequestParam(name = "query") Optional<String> prefix) {
+		return moexService.getStocksByPage(page, prefix.orElse(null));
 	}
 }

@@ -14,5 +14,5 @@ public class StockList {
     private final Integer pageNum;
     private final Integer pageSize;
     private final Integer totalCount;
-    private final List<Stock> stocks;
+    private final List<Stock> list;
 }

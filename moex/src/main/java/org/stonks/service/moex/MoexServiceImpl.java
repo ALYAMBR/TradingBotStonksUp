@@ -44,6 +44,9 @@ public class MoexServiceImpl implements MoexService {
     @Value("${urls.moex.stocks.path}")
     private String STOCKS_INFO_PATH;
 
+    @Value("${urls.moex.stocks.path.without.query}")
+    private String STOCKS_INFO_WITHOUT_QUERY_PATH;
+
     @Autowired
     public MoexServiceImpl(RestTemplateBuilder http) {
         this.http = http.build();
@@ -90,10 +93,18 @@ public class MoexServiceImpl implements MoexService {
         // TODO: убрать когда это апигвна поменяют и сделают нумерацю страниц с 0
         pageNum--;
 
-        String responseBody = http.getForEntity(
-            moexUrl + STOCKS_INFO_PATH,
-            String.class,
-            partOfName, perPage, pageNum * perPage).getBody();
+        String responseBody = null;
+        if (partOfName != null) {
+            responseBody = http.getForEntity(
+                    moexUrl + STOCKS_INFO_PATH,
+                    String.class,
+                    partOfName, perPage, pageNum * perPage).getBody();
+        } else {
+            responseBody = http.getForEntity(
+                    moexUrl + STOCKS_INFO_WITHOUT_QUERY_PATH,
+                    String.class,
+                     perPage, pageNum * perPage).getBody();
+        }
 
         try {
             JsonNode securities = mapper.readTree(responseBody).get(1).at("/securities");
